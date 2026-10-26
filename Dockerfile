@@ -12,6 +12,8 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# El repo no tiene carpeta public/ (git no guarda carpetas vacías); se crea para el COPY del runner.
+RUN mkdir -p public
 RUN npx prisma generate && npx next build
 
 FROM base AS runner
