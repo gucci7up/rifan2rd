@@ -1,26 +1,64 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-ink: #07080c;
+  --color-panel: #0f1118;
+  --color-panel-2: #161926;
+  --color-line: #262a3b;
+  --color-muted: #9aa0b4;
+  --color-gold: #f4c542;
+  --color-gold-2: #ffdf7e;
+  --color-emerald: #2fd187;
+  --color-danger: #ff5c6c;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-ink);
+  color: #eef0f6;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-glow {
+  background:
+    radial-gradient(60rem 30rem at 50% -10rem, rgb(244 197 66 / 0.14), transparent 70%),
+    radial-gradient(40rem 20rem at 100% 30%, rgb(47 209 135 / 0.06), transparent 70%);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(100deg, var(--color-gold-2), var(--color-gold) 45%, #d9962b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-gold {
+  @apply btn bg-gradient-to-b from-gold-2 to-gold text-ink shadow-[0_8px_30px_-8px_rgb(244_197_66/0.6)] hover:brightness-105;
+}
+@utility btn-ghost {
+  @apply btn border border-line bg-panel-2 text-white hover:border-gold/60;
+}
+@utility btn-danger {
+  @apply btn border border-danger/40 bg-danger/10 text-danger hover:bg-danger/20;
+}
+@utility card {
+  @apply rounded-2xl border border-line bg-panel;
+}
+@utility input {
+  @apply w-full rounded-xl border border-line bg-panel-2 px-4 py-3 text-sm text-white outline-none placeholder:text-muted/60 focus:border-gold/70 focus:ring-2 focus:ring-gold/20;
+}
+@utility label {
+  @apply mb-1.5 block text-xs font-semibold tracking-wide text-muted uppercase;
+}
+@utility chip {
+  @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold;
 }

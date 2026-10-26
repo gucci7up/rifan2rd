@@ -1,0 +1,157 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RaffleStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  SOLD_OUT
+  DRAWN
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WinnerType {
+  MAIN
+  INSTANT
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  raffles   Raffle[]
+}
+
+model Raffle {
+  id               Int           @id @default(autoincrement())
+  slug             String        @unique
+  title            String
+  mainPrize        String
+  description      String        @db.Text
+  imageUrl         String?
+  categoryId       Int?
+  category         Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  ticketPrice      Decimal       @db.Decimal(10, 2)
+  totalTickets     Int
+  minPerOrder      Int           @default(1)
+  maxPerPhone      Int           @default(1000)
+  status           RaffleStatus  @default(DRAFT)
+  // Fecha del sorteo. Si es null, se fija al llegar a drawThresholdPct.
+  drawAt           DateTime?
+  drawThresholdPct Int           @default(80)
+  // Sorteo verificable (commit-reveal): se publica seedHash antes y seed después.
+  seedHash         String?
+  seed             String?
+  winningNumber    Int?
+  drawnAt          DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  packages         Package[]
+  prizeNumbers     PrizeNumber[]
+  orders           Order[]
+  tickets          Ticket[]
+  winners          Winner[]
+
+  @@index([status])
+}
+
+model Package {
+  id        Int     @id @default(autoincrement())
+  raffleId  Int
+  raffle    Raffle  @relation(fields: [raffleId], references: [id], onDelete: Cascade)
+  quantity  Int
+  price     Decimal @db.Decimal(10, 2)
+  highlight Boolean @default(false)
+  sortOrder Int     @default(0)
+}
+
+// Números "premiados": si al cliente le toca uno, gana al instante.
+model PrizeNumber {
+  id       Int     @id @default(autoincrement())
+  raffleId Int
+  raffle   Raffle  @relation(fields: [raffleId], references: [id], onDelete: Cascade)
+  number   Int
+  prize    String
+  ticketId Int?    @unique
+  ticket   Ticket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  @@unique([raffleId, number])
+}
+
+model BankAccount {
+  id            Int     @id @default(autoincrement())
+  bank          String
+  holder        String
+  accountNumber String
+  accountType   String
+  documentId    String?
+  active        Boolean @default(true)
+  sortOrder     Int     @default(0)
+  orders        Order[]
+}
+
+model Order {
+  id            Int          @id @default(autoincrement())
+  code          String       @unique
+  raffleId      Int
+  raffle        Raffle       @relation(fields: [raffleId], references: [id], onDelete: Cascade)
+  name          String
+  phone         String
+  email         String?
+  quantity      Int
+  total         Decimal      @db.Decimal(10, 2)
+  paymentMethod String       @default("transfer")
+  paymentRef    String?
+  bankAccountId Int?
+  bankAccount   BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
+  receiptPath   String?
+  status        OrderStatus  @default(PENDING)
+  rejectReason  String?
+  ip            String?
+  createdAt     DateTime     @default(now())
+  reviewedAt    DateTime?
+  tickets       Ticket[]
+
+  @@index([raffleId, status])
+  @@index([phone])
+}
+
+model Ticket {
+  id        Int          @id @default(autoincrement())
+  raffleId  Int
+  raffle    Raffle       @relation(fields: [raffleId], references: [id], onDelete: Cascade)
+  orderId   Int
+  order     Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  number    Int
+  createdAt DateTime     @default(now())
+  prize     PrizeNumber?
+
+  @@unique([raffleId, number])
+}
+
+model Winner {
+  id           Int        @id @default(autoincrement())
+  raffleId     Int?
+  raffle       Raffle?    @relation(fields: [raffleId], references: [id], onDelete: SetNull)
+  name         String
+  prize        String
+  ticketNumber Int?
+  type         WinnerType @default(MAIN)
+  photoUrl     String?
+  published    Boolean    @default(true)
+  wonAt        DateTime   @default(now())
+}
