@@ -5,7 +5,27 @@ instantáneos, verificador de boletos, sorteo verificable (commit-reveal) y pane
 
 **Stack:** Next.js 15 (App Router) · PostgreSQL · Prisma 6 · Tailwind CSS 4 · Docker (Dokploy).
 
-## Despliegue en Dokploy
+## Despliegue en Dokploy con Compose (recomendado)
+
+Usa el [docker-compose.yml](docker-compose.yml), que incluye la app, Postgres y los volúmenes persistentes.
+
+1. *Create Service → Compose* → conecta el repositorio, rama `main`, *Compose Path* `./docker-compose.yml`.
+2. **Environment** del Compose:
+   ```
+   POSTGRES_PASSWORD=<solo letras y números, ej. openssl rand -hex 24>
+   ADMIN_USER=admin
+   ADMIN_PASSWORD=<clave larga>
+   SESSION_SECRET=<openssl rand -hex 32>
+   SITE_URL=https://tudominio.com
+   SITE_NAME=Rifan2 RD
+   WHATSAPP=1809XXXXXXX
+   INSTAGRAM=tu_usuario
+   ```
+3. **Domains:** agrega tu dominio, servicio **app**, puerto **3000**, HTTPS activado.
+4. **Deploy.** Los volúmenes `uploads` (comprobantes e imágenes) y `pgdata` (base de datos) se crean solos y
+   sobreviven a los redespliegues. No hace falta configurar nada en *Advanced → Volumes*.
+
+## Despliegue en Dokploy como Application (alternativa)
 
 1. **Sube el código a un repositorio Git** (GitHub, GitLab o Gitea).
 2. **Crea la base de datos:** en tu proyecto de Dokploy → *Create Service → Database → PostgreSQL*.
